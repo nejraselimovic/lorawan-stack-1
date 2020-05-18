@@ -24,8 +24,11 @@ import (
 type UserSession struct {
 	Model
 
-	User   *User
-	UserID string `gorm:"type:UUID;index:user_session_user_index;not null"`
+	TokenID string `gorm:"type:VARCHAR;unique_index:api_key_id_index"`
+
+	User     *User
+	UserID   string `gorm:"type:UUID;index:user_session_user_index;not null"`
+	TokenKey string `gorm:"type:VARCHAR;not null"`
 
 	ExpiresAt *time.Time
 }
@@ -36,9 +39,14 @@ func init() {
 
 func (sess UserSession) toPB(pb *ttnpb.UserSession) {
 	pb.SessionID = sess.ID
+	pb.TokenID = sess.TokenID
+	pb.TokenKey = sess.TokenKey
 	pb.CreatedAt = cleanTime(sess.CreatedAt)
 	pb.UpdatedAt = cleanTime(sess.UpdatedAt)
 	pb.ExpiresAt = cleanTimePtr(sess.ExpiresAt)
+	if sess.User != nil {
+		pb.UserIDs.UserID = sess.User.Account.UID
+	}
 }
 
 func (sess *UserSession) fromPB(pb *ttnpb.UserSession) []string {

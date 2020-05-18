@@ -33,12 +33,14 @@ type userSessionStore struct {
 
 func (s *userSessionStore) CreateSession(ctx context.Context, sess *ttnpb.UserSession) (*ttnpb.UserSession, error) {
 	defer trace.StartRegion(ctx, "create user session").End()
-	user, err := s.findEntity(ctx, sess.UserIdentifiers, "id")
+	user, err := s.findEntity(ctx, sess.UserIDs, "id")
 	if err != nil {
 		return nil, err
 	}
 	sessionModel := UserSession{
 		UserID:    user.PrimaryKey(),
+		TokenID:   sess.TokenID,
+		TokenKey:  sess.TokenKey,
 		ExpiresAt: cleanTimePtr(sess.ExpiresAt),
 	}
 	if err = s.createEntity(ctx, &sessionModel); err != nil {
@@ -70,7 +72,7 @@ func (s *userSessionStore) FindSessions(ctx context.Context, userIDs *ttnpb.User
 	sessionProtos := make([]*ttnpb.UserSession, len(sessionModels))
 	for i, sessionModel := range sessionModels {
 		sessionProto := &ttnpb.UserSession{}
-		sessionProto.UserID = userIDs.UserID
+		sessionProto.UserIDs = *userIDs
 		sessionModel.toPB(sessionProto)
 		sessionProtos[i] = sessionProto
 	}
@@ -92,14 +94,38 @@ func (s *userSessionStore) GetSession(ctx context.Context, userIDs *ttnpb.UserId
 		return nil, err
 	}
 	sessionProto := &ttnpb.UserSession{}
-	sessionProto.UserID = userIDs.UserID
+	sessionProto.UserIDs = *userIDs
+	sessionModel.toPB(sessionProto)
+	return sessionProto, nil
+}
+
+func (s *userSessionStore) GetSessionByTokenID(ctx context.Context, tokenID string) (*ttnpb.UserSession, error) {
+	defer trace.StartRegion(ctx, "get user session by token id").End()
+	query := s.query(ctx, UserSession{}).Where(UserSession{TokenID: tokenID})
+	var sessionModel UserSession
+	if err := query.Find(&sessionModel).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, errSessionNotFound.WithAttributes("token_id", tokenID)
+		}
+		return nil, err
+	}
+	query = s.query(ctx, Account{}).Where(Account{AccountID: sessionModel.UserID})
+	var accountModel Account
+	if err := query.Find(&accountModel).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, errSessionNotFound.WithAttributes("user_id", sessionModel.UserID)
+		}
+		return nil, err
+	}
+	sessionProto := &ttnpb.UserSession{}
+	sessionProto.UserIDs.UserID = accountModel.UID
 	sessionModel.toPB(sessionProto)
 	return sessionProto, nil
 }
 
 func (s *userSessionStore) UpdateSession(ctx context.Context, sess *ttnpb.UserSession) (*ttnpb.UserSession, error) {
 	defer trace.StartRegion(ctx, "update user session").End()
-	user, err := s.findEntity(ctx, sess.UserIdentifiers, "id")
+	user, err := s.findEntity(ctx, sess.UserIDs, "id")
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +133,7 @@ func (s *userSessionStore) UpdateSession(ctx context.Context, sess *ttnpb.UserSe
 	var sessionModel UserSession
 	if err = query.Find(&sessionModel).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
-			return nil, errSessionNotFound.WithAttributes("user_id", sess.UserIdentifiers.UserID, "session_id", sess.SessionID)
+			return nil, errSessionNotFound.WithAttributes("user_id", sess.UserIDs.UserID, "session_id", sess.SessionID)
 		}
 		return nil, err
 	}
