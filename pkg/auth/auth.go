@@ -44,6 +44,8 @@ var (
 	RefreshToken = TokenType(enc.EncodeToString([]byte("ref")))
 	// AuthorizationCode is used by OAuth clients to exchange AccessTokens.
 	AuthorizationCode = TokenType(enc.EncodeToString([]byte("aut")))
+	// SessionToken is used to authorize actions by user session.
+	SessionToken = TokenType(enc.EncodeToString([]byte("ssn")))
 )
 
 // TokenType indicates the type of a token.
@@ -74,7 +76,7 @@ func SplitToken(token string) (tokenType TokenType, id, key string, err error) {
 		return "", "", "", errInvalidToken.New()
 	}
 	switch TokenType(parts[0]) {
-	case APIKey, AccessToken, RefreshToken, AuthorizationCode:
+	case APIKey, AccessToken, RefreshToken, AuthorizationCode, SessionToken:
 		return TokenType(parts[0]), parts[1], parts[2], nil
 	default:
 		return "", "", "", errInvalidToken.New()
