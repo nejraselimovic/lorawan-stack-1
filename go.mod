@@ -27,10 +27,10 @@ replace github.com/russross/blackfriday => github.com/russross/blackfriday v1.5.
 replace github.com/nicksnyder/go-i18n => github.com/nicksnyder/go-i18n v1.10.0
 
 require (
-	cloud.google.com/go/bigquery v1.6.0 // indirect
+	cloud.google.com/go/storage v1.8.0 // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
-	github.com/Azure/azure-sdk-for-go v42.1.0+incompatible // indirect
+	github.com/Azure/azure-sdk-for-go v42.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.10.1 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.8.3 // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2 // indirect
@@ -40,9 +40,10 @@ require (
 	github.com/TheThingsIndustries/magepkg v0.0.0-20190214092847-6c0299b7c3ed
 	github.com/TheThingsIndustries/mystique v0.0.0-20200127144137-4aa959111fe7
 	github.com/TheThingsNetwork/go-cayenne-lib v1.0.0
-	github.com/aws/aws-sdk-go v1.30.22
+	github.com/alecthomas/chroma v0.7.3 // indirect
+	github.com/aws/aws-sdk-go v1.30.29
 	github.com/bep/golibsass v0.7.0 // indirect
-	github.com/blang/semver v2.2.0+incompatible
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/chrj/smtpd v0.1.2
 	github.com/client9/misspell v0.3.4
 	github.com/disintegration/imaging v1.6.2
@@ -57,9 +58,11 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/gohugoio/hugo v0.70.0
 	github.com/golang/gddo v0.0.0-20200324184333-3c2cc9a6329d
-	github.com/golang/protobuf v1.3.5
+	github.com/golang/protobuf v1.4.2
+	github.com/google/go-cmp v0.4.1 // indirect
 	github.com/google/wire v0.4.0 // indirect
-	github.com/goreleaser/goreleaser v0.133.0
+	github.com/goreleaser/goreleaser v0.134.0
+	github.com/gorilla/csrf v1.6.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/securecookie v1.1.1
@@ -100,11 +103,11 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nats-io/nats-server/v2 v2.1.4
 	github.com/nats-io/nats.go v1.9.2
-	github.com/nicksnyder/go-i18n v1.10.1 // indirect
+	github.com/nicksnyder/go-i18n v2.0.3+incompatible // indirect
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/openshift/osin v1.0.1
 	github.com/pborman/uuid v1.2.0 // indirect
-	github.com/pelletier/go-toml v1.7.0 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
@@ -119,7 +122,7 @@ require (
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.6.3
+	github.com/spf13/viper v1.7.0
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/tdewolff/minify/v2 v2.7.4 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
@@ -128,22 +131,25 @@ require (
 	go.thethings.network/lorawan-stack-legacy/v2 v2.0.2
 	gocloud.dev v0.19.0
 	gocloud.dev/pubsub/natspubsub v0.19.0
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/image v0.0.0-20200430140353-33d19683fad8 // indirect
-	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
+	golang.org/x/mod v0.3.0 // indirect
+	golang.org/x/net v0.0.0-20200513185701-a91f0712d120
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	golang.org/x/tools v0.0.0-20200507050207-a1532b81a28f
+	golang.org/x/tools v0.0.0-20200515220128-d3bf790afa53
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
-	google.golang.org/api v0.23.0
+	google.golang.org/api v0.24.0
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/genproto v0.0.0-20200507105951-43844f6eee31
+	google.golang.org/genproto v0.0.0-20200515170657-fc4c6c6a6587
 	google.golang.org/grpc v1.29.1
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.0.0-00010101000000-000000000000 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/ini.v1 v1.55.0 // indirect
+	gopkg.in/ini.v1 v1.56.0 // indirect
 	gopkg.in/mail.v2 v2.3.1
 	gopkg.in/square/go-jose.v2 v2.5.1
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
+	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
