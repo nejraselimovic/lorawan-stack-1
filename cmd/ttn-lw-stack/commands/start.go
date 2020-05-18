@@ -43,6 +43,7 @@ import (
 	nsredis "go.thethings.network/lorawan-stack/v3/pkg/networkserver/redis"
 	"go.thethings.network/lorawan-stack/v3/pkg/packetbrokeragent"
 	"go.thethings.network/lorawan-stack/v3/pkg/qrcodegenerator"
+	"go.thethings.network/lorawan-stack/v3/pkg/random"
 	"go.thethings.network/lorawan-stack/v3/pkg/redis"
 	"go.thethings.network/lorawan-stack/v3/pkg/web"
 )
@@ -117,6 +118,14 @@ var startCommand = &cobra.Command{
 		var rootRedirect web.Registerer
 
 		var componentOptions []component.Option
+
+		if len(config.ServiceBase.HTTP.CSRF.AuthKey) == 0 || web.IsZeros(config.ServiceBase.HTTP.CSRF.AuthKey) {
+			if !web.IsZeros(config.ServiceBase.HTTP.Cookie.HashKey) && len(config.ServiceBase.HTTP.Cookie.HashKey) == 32 {
+				config.ServiceBase.HTTP.CSRF.AuthKey = config.ServiceBase.HTTP.Cookie.HashKey
+			} else {
+				config.ServiceBase.HTTP.CSRF.AuthKey = random.Bytes(32)
+			}
+		}
 
 		c, err := component.New(logger, &component.Config{ServiceBase: config.ServiceBase}, componentOptions...)
 		if err != nil {

@@ -64,6 +64,8 @@ type options struct {
 	cookieHashKey  []byte
 	cookieBlockKey []byte
 
+	csrfAuthKey []byte
+
 	staticMount       string
 	staticSearchPaths []string
 
@@ -96,6 +98,13 @@ func WithTrustedProxies(cidrs ...string) Option {
 func WithCookieKeys(hashKey, blockKey []byte) Option {
 	return func(o *options) {
 		o.cookieHashKey, o.cookieBlockKey = hashKey, blockKey
+	}
+}
+
+// WithCSRFAuthKey sets the auth key for the CSRF middleware.
+func WithCSRFAuthKey(csrfAuthKey []byte) Option {
+	return func(o *options) {
+		o.csrfAuthKey = csrfAuthKey
 	}
 }
 
@@ -132,9 +141,9 @@ func New(ctx context.Context, opts ...Option) (*Server, error) {
 		opt(options)
 	}
 
-	hashKey, blockKey := options.cookieHashKey, options.cookieBlockKey
+	hashKey, blockKey, csrfAuthKey := options.cookieHashKey, options.cookieBlockKey, options.csrfAuthKey
 
-	if len(hashKey) == 0 || isZeros(hashKey) {
+	if len(hashKey) == 0 || IsZeros(hashKey) {
 		hashKey = random.Bytes(64)
 		logger.WithField("hash_key", hashKey).Warn("No cookie hash key configured, generated a random one")
 	}
@@ -143,7 +152,7 @@ func New(ctx context.Context, opts ...Option) (*Server, error) {
 		return nil, errors.New("Expected cookie hash key to be 32 or 64 bytes long")
 	}
 
-	if len(blockKey) == 0 || isZeros(blockKey) {
+	if len(blockKey) == 0 || IsZeros(blockKey) {
 		blockKey = random.Bytes(32)
 		logger.WithField("block_key", blockKey).Warn("No cookie block key configured, generated a random one")
 	}
@@ -152,9 +161,13 @@ func New(ctx context.Context, opts ...Option) (*Server, error) {
 		return nil, errors.New("Expected cookie block key to be 32 bytes long")
 	}
 
+	if len(csrfAuthKey) == 0 || IsZeros(csrfAuthKey) {
+		csrfAuthKey = random.Bytes(32)
+		logger.WithField("csrf_auth_key", csrfAuthKey).Warn("No CSRF auth key configured, generated a random one")
+	}
+
 	var proxyConfiguration webmiddleware.ProxyConfiguration
 	proxyConfiguration.ParseAndAddTrusted(options.trustedProxies...)
-
 	root := mux.NewRouter()
 	root.NotFoundHandler = http.HandlerFunc(webhandlers.NotFound)
 	root.Use(
@@ -166,6 +179,7 @@ func New(ctx context.Context, opts ...Option) (*Server, error) {
 		mux.MiddlewareFunc(webmiddleware.MaxBody(1<<24)), // 16 MB.
 		mux.MiddlewareFunc(webmiddleware.SecurityHeaders()),
 		mux.MiddlewareFunc(webmiddleware.Log(logger)),
+		mux.MiddlewareFunc(webmiddleware.Cookies(blockKey, hashKey)),
 	)
 
 	var redirectConfig webmiddleware.RedirectConfiguration
@@ -204,6 +218,7 @@ func New(ctx context.Context, opts ...Option) (*Server, error) {
 			MaxAge:           600,
 			AllowCredentials: true,
 		})),
+		mux.MiddlewareFunc(webmiddleware.CookieAuth("_session", csrfAuthKey)),
 	)
 	root.PathPrefix("/api/").Handler(apiRouter)
 
@@ -259,7 +274,8 @@ func New(ctx context.Context, opts ...Option) (*Server, error) {
 	return s, nil
 }
 
-func isZeros(buf []byte) bool {
+// IsZeros checks whether a byte array consists only of zeros.
+func IsZeros(buf []byte) bool {
 	for _, b := range buf {
 		if b != 0x00 {
 			return false

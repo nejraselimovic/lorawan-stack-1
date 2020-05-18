@@ -39,19 +39,14 @@ const authCookieName = "_session"
 func (s *server) authCookie() *cookie.Cookie {
 	return &cookie.Cookie{
 		Name:     authCookieName,
-		Path:     s.config.UI.MountPath(),
+		Path:     "/",
 		HTTPOnly: true,
 	}
 }
 
-type authCookie struct {
-	UserID    string `json:"user_id"`
-	SessionID string `json:"session_id"`
-}
-
 var errAuthCookie = errors.DefineUnauthenticated("auth_cookie", "could not get auth cookie")
 
-func (s *server) getAuthCookie(c echo.Context) (cookie authCookie, err error) {
+func (s *server) getAuthCookie(c echo.Context) (cookie auth.CookieShape, err error) {
 	ok, err := s.authCookie().Get(c, &cookie)
 	if err != nil {
 		return cookie, err
@@ -62,8 +57,8 @@ func (s *server) getAuthCookie(c echo.Context) (cookie authCookie, err error) {
 	return cookie, nil
 }
 
-func (s *server) updateAuthCookie(c echo.Context, update func(value *authCookie) error) error {
-	cookie := &authCookie{}
+func (s *server) updateAuthCookie(c echo.Context, update func(value *auth.CookieShape) error) error {
+	cookie := &auth.CookieShape{}
 	_, err := s.authCookie().Get(c, cookie)
 	if err != nil {
 		return err
@@ -119,7 +114,7 @@ func (s *server) getUser(c echo.Context) (*ttnpb.User, error) {
 	}
 	user, err := s.store.GetUser(
 		c.Request().Context(),
-		&ttnpb.UserIdentifiers{UserID: session.UserID},
+		&ttnpb.UserIdentifiers{UserID: session.UserIDs.UserID},
 		nil,
 	)
 	if err != nil {
@@ -192,16 +187,32 @@ func (s *server) Login(c echo.Context) error {
 		return err
 	}
 	userIDs := ttnpb.UserIdentifiers{UserID: req.UserID}
+	tokenID, err := auth.GenerateID(ctx)
+	if err != nil {
+		return err
+	}
+	tokenKey, err := auth.GenerateKey(ctx)
+	if err != nil {
+		return err
+	}
+	hashedKey, err := auth.Hash(ctx, tokenKey)
+	if err != nil {
+		return err
+	}
 	session, err := s.store.CreateSession(ctx, &ttnpb.UserSession{
-		UserIdentifiers: userIDs,
+		UserIDs:  userIDs,
+		TokenID:  tokenID,
+		TokenKey: hashedKey,
 	})
 	if err != nil {
 		return err
 	}
 	events.Publish(evtUserLogin(ctx, userIDs, nil))
-	err = s.updateAuthCookie(c, func(cookie *authCookie) error {
-		cookie.UserID = session.UserID
+	err = s.updateAuthCookie(c, func(cookie *auth.CookieShape) error {
+		cookie.UserID = session.UserIDs.UserID
 		cookie.SessionID = session.SessionID
+		cookie.TokenKey = tokenKey
+		cookie.TokenID = session.TokenID
 		return nil
 	})
 	if err != nil {
@@ -266,8 +277,8 @@ func (s *server) ClientLogout(c echo.Context) error {
 		return err
 	}
 	if session != nil {
-		events.Publish(evtUserLogout(ctx, session.UserIdentifiers, nil))
-		if err = s.store.DeleteSession(ctx, &session.UserIdentifiers, session.SessionID); err != nil {
+		events.Publish(evtUserLogout(ctx, session.UserIDs, nil))
+		if err = s.store.DeleteSession(ctx, &session.UserIDs, session.SessionID); err != nil {
 			return err
 		}
 	}
@@ -285,8 +296,8 @@ func (s *server) Logout(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	events.Publish(evtUserLogout(ctx, session.UserIdentifiers, nil))
-	if err = s.store.DeleteSession(ctx, &session.UserIdentifiers, session.SessionID); err != nil {
+	events.Publish(evtUserLogout(ctx, session.UserIDs, nil))
+	if err = s.store.DeleteSession(ctx, &session.UserIDs, session.SessionID); err != nil {
 		return err
 	}
 	s.removeAuthCookie(c)

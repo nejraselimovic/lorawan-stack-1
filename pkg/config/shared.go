@@ -66,6 +66,13 @@ type Cookie struct {
 	BlockKey []byte `name:"block-key" description:"Key for cookie contents encryption (16, 24 or 32 bytes)"`
 }
 
+// CSRF represents cross-site request forgery protection configuration.
+// The authentication key should be 32-bytes long and persist across application restarts.
+// Changing the auth key will invalidate csrf tokens and break your CSRF validation.
+type CSRF struct {
+	AuthKey []byte `name:"auth-key" description:"Authentication key to for CSRF protection via masked sync token (32 bytes)"`
+}
+
 // PProf represents the pprof endpoint configuration.
 type PProf struct {
 	Enable   bool   `name:"enable" description:"Enable pprof endpoint on HTTP server"`
@@ -99,6 +106,7 @@ type HTTP struct {
 	RedirectToHTTPS bool             `name:"redirect-to-tls" description:"Redirect HTTP requests to HTTPS"`
 	Static          HTTPStaticConfig `name:"static"`
 	Cookie          Cookie           `name:"cookie"`
+	CSRF            CSRF             `name:"csrf"`
 	PProf           PProf            `name:"pprof"`
 	Metrics         Metrics          `name:"metrics"`
 	Health          Health           `name:"health"`
