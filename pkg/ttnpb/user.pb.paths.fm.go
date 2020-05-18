@@ -288,6 +288,8 @@ var UserSessionFieldPathsNested = []string{
 	"created_at",
 	"expires_at",
 	"session_id",
+	"token_id",
+	"token_key",
 	"updated_at",
 	"user_ids",
 	"user_ids.email",
@@ -298,6 +300,8 @@ var UserSessionFieldPathsTopLevel = []string{
 	"created_at",
 	"expires_at",
 	"session_id",
+	"token_id",
+	"token_key",
 	"updated_at",
 	"user_ids",
 }

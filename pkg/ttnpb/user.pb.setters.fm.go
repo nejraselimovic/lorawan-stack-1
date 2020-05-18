@@ -910,18 +910,18 @@ func (dst *UserSession) SetFields(src *UserSession, paths ...string) error {
 			if len(subs) > 0 {
 				var newDst, newSrc *UserIdentifiers
 				if src != nil {
-					newSrc = &src.UserIdentifiers
+					newSrc = &src.UserIDs
 				}
-				newDst = &dst.UserIdentifiers
+				newDst = &dst.UserIDs
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
 			} else {
 				if src != nil {
-					dst.UserIdentifiers = src.UserIdentifiers
+					dst.UserIDs = src.UserIDs
 				} else {
 					var zero UserIdentifiers
-					dst.UserIdentifiers = zero
+					dst.UserIDs = zero
 				}
 			}
 		case "session_id":
@@ -962,6 +962,26 @@ func (dst *UserSession) SetFields(src *UserSession, paths ...string) error {
 				dst.ExpiresAt = src.ExpiresAt
 			} else {
 				dst.ExpiresAt = nil
+			}
+		case "token_id":
+			if len(subs) > 0 {
+				return fmt.Errorf("'token_id' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.TokenID = src.TokenID
+			} else {
+				var zero string
+				dst.TokenID = zero
+			}
+		case "token_key":
+			if len(subs) > 0 {
+				return fmt.Errorf("'token_key' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.TokenKey = src.TokenKey
+			} else {
+				var zero string
+				dst.TokenKey = zero
 			}
 
 		default:

@@ -12994,6 +12994,16 @@
               "defaultValue": ""
             },
             {
+              "name": "user_session",
+              "description": "",
+              "label": "",
+              "type": "UserSession",
+              "longType": "UserSession",
+              "fullType": "ttn.lorawan.v3.UserSession",
+              "ismap": false,
+              "defaultValue": ""
+            },
+            {
               "name": "universal_rights",
               "description": "",
               "label": "",
@@ -25483,7 +25493,7 @@
           "name": "User",
           "longName": "User",
           "fullName": "ttn.lorawan.v3.User",
-          "description": "User is the message that defines an user on the network.",
+          "description": "User is the message that defines a user on the network.",
           "hasExtensions": false,
           "hasFields": true,
           "extensions": [],
@@ -25788,15 +25798,7 @@
               "longType": "string",
               "fullType": "string",
               "ismap": false,
-              "defaultValue": "",
-              "options": {
-                "validate.rules": [
-                  {
-                    "name": "string.max_len",
-                    "value": 64
-                  }
-                ]
-              }
+              "defaultValue": ""
             },
             {
               "name": "created_at",
@@ -25825,6 +25827,26 @@
               "type": "Timestamp",
               "longType": "google.protobuf.Timestamp",
               "fullType": "google.protobuf.Timestamp",
+              "ismap": false,
+              "defaultValue": ""
+            },
+            {
+              "name": "token_id",
+              "description": "",
+              "label": "",
+              "type": "string",
+              "longType": "string",
+              "fullType": "string",
+              "ismap": false,
+              "defaultValue": ""
+            },
+            {
+              "name": "token_key",
+              "description": "",
+              "label": "",
+              "type": "string",
+              "longType": "string",
+              "fullType": "string",
               "ismap": false,
               "defaultValue": ""
             }

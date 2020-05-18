@@ -28,7 +28,7 @@ package ttn.lorawan.v3;
 
 option go_package = "go.thethings.network/lorawan-stack/v3/pkg/ttnpb";
 
-// User is the message that defines an user on the network.
+// User is the message that defines a user on the network.
 message User {
   UserIdentifiers ids = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (validate.rules).message.required = true];
   google.protobuf.Timestamp created_at = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
@@ -170,11 +170,13 @@ message UserSessionIdentifiers {
 }
 
 message UserSession {
-  UserIdentifiers user_ids = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (validate.rules).message.required = true];
-  string session_id = 2 [(gogoproto.customname) = "SessionID", (validate.rules).string.max_len = 64];
+  UserIdentifiers user_ids = 1 [(gogoproto.customname) = "UserIDs", (gogoproto.nullable) = false, (validate.rules).message.required = true];
+  string session_id = 2 [(gogoproto.customname) = "SessionID"];
   google.protobuf.Timestamp created_at = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   google.protobuf.Timestamp updated_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   google.protobuf.Timestamp expires_at = 5 [(gogoproto.stdtime) = true];
+  string token_id = 6 [(gogoproto.customname) = "TokenID"];
+  string token_key = 7;
 }
 
 message UserSessions {
