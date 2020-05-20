@@ -311,6 +311,7 @@
         "default_formatters.up_formatter",
         "default_formatters.up_formatter_parameter",
         "network_server_address",
+        "skip_payload_crypto",
         "tls"
       ]
     },
@@ -334,6 +335,7 @@
         "default_formatters.up_formatter",
         "default_formatters.up_formatter_parameter",
         "network_server_address",
+        "skip_payload_crypto",
         "tls"
       ]
     },
