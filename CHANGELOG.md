@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Setting custom gateway attributes in the console
+- Setting custom gateway attributes in the Console.
 - Pub/Sub documentation.
+- Latest "last seen" info and uplink frame counts for end devices in the Console.
+- Latest "last seen" info for applications in the Console.
 
 ### Changed
 
