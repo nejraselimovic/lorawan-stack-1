@@ -17,6 +17,7 @@ package applicationserver
 import (
 	"context"
 
+	pbtypes "github.com/gogo/protobuf/types"
 	"go.thethings.network/lorawan-stack/v3/pkg/errors"
 	"go.thethings.network/lorawan-stack/v3/pkg/ttnpb"
 )
@@ -31,6 +32,109 @@ type DeviceRegistry interface {
 	Get(ctx context.Context, ids ttnpb.EndDeviceIdentifiers, paths []string) (*ttnpb.EndDevice, error)
 	// Set creates, updates or deletes the end device by its identifiers.
 	Set(ctx context.Context, ids ttnpb.EndDeviceIdentifiers, paths []string, f func(*ttnpb.EndDevice) (*ttnpb.EndDevice, []string, error)) (*ttnpb.EndDevice, error)
+}
+
+type deprecatedDeviceField struct {
+	Old          string
+	New          string
+	GetTransform func(dev *ttnpb.EndDevice)
+	SetTransform func(dev *ttnpb.EndDevice, useOld, useNew bool) error
+}
+
+type deprecatedDeviceFieldMatch struct {
+	deprecatedDeviceField
+	MatchedOld bool
+	MatchedNew bool
+}
+
+type deprecatedDeviceFieldRegistryWrapper struct {
+	fields   []deprecatedDeviceField
+	registry DeviceRegistry
+}
+
+func matchDeprecatedDeviceFields(paths []string, deprecated []deprecatedDeviceField) ([]string, []deprecatedDeviceFieldMatch) {
+	var matched []deprecatedDeviceFieldMatch
+	for _, f := range deprecated {
+		hasOld, hasNew := ttnpb.HasAnyField(paths, f.Old), ttnpb.HasAnyField(paths, f.New)
+		switch {
+		case !hasOld && !hasNew:
+			continue
+		case hasOld && hasNew:
+		case hasOld:
+			paths = ttnpb.AddFields(paths, f.New)
+		case hasNew:
+			paths = ttnpb.AddFields(paths, f.Old)
+		}
+		matched = append(matched, deprecatedDeviceFieldMatch{
+			deprecatedDeviceField: f,
+			MatchedOld:            hasOld,
+			MatchedNew:            hasNew,
+		})
+	}
+	return paths, matched
+}
+
+func (w deprecatedDeviceFieldRegistryWrapper) Get(ctx context.Context, ids ttnpb.EndDeviceIdentifiers, paths []string) (*ttnpb.EndDevice, error) {
+	paths, deprecated := matchDeprecatedDeviceFields(paths, w.fields)
+	dev, err := w.registry.Get(ctx, ids, paths)
+	if err != nil || dev == nil {
+		return dev, err
+	}
+	for _, d := range deprecated {
+		d.GetTransform(dev)
+	}
+	return dev, nil
+}
+
+func (w deprecatedDeviceFieldRegistryWrapper) Set(ctx context.Context, ids ttnpb.EndDeviceIdentifiers, paths []string, f func(*ttnpb.EndDevice) (*ttnpb.EndDevice, []string, error)) (*ttnpb.EndDevice, error) {
+	paths, deprecated := matchDeprecatedDeviceFields(paths, w.fields)
+	dev, err := w.registry.Set(ctx, ids, paths, func(dev *ttnpb.EndDevice) (*ttnpb.EndDevice, []string, error) {
+		if dev != nil {
+			for _, d := range deprecated {
+				d.GetTransform(dev)
+			}
+		}
+		dev, paths, err := f(dev)
+		if err != nil || dev == nil {
+			return dev, paths, err
+		}
+		for _, d := range deprecated {
+			d.SetTransform(dev, d.MatchedOld, d.MatchedNew)
+		}
+		return dev, paths, nil
+	})
+	if err != nil || dev == nil {
+		return dev, err
+	}
+	for _, d := range deprecated {
+		d.GetTransform(dev)
+	}
+	return dev, nil
+}
+
+func wrapDeviceRegistryWithDeprecatedFields(r DeviceRegistry, fields ...deprecatedDeviceField) DeviceRegistry {
+	return deprecatedDeviceFieldRegistryWrapper{
+		fields:   fields,
+		registry: r,
+	}
+}
+
+var deprecatedDeviceFields = []deprecatedDeviceField{
+	{
+		Old: "skip_payload_crypto",
+		New: "skip_payload_crypto_override",
+		GetTransform: func(dev *ttnpb.EndDevice) {
+			if dev.SkipPayloadCryptoOverride == nil && dev.SkipPayloadCrypto {
+				dev.SkipPayloadCryptoOverride = &pbtypes.BoolValue{Value: true}
+			} else {
+				dev.SkipPayloadCrypto = dev.SkipPayloadCryptoOverride.GetValue()
+			}
+		},
+		SetTransform: func(dev *ttnpb.EndDevice, _, _ bool) error {
+			dev.SkipPayloadCrypto = dev.SkipPayloadCryptoOverride.GetValue()
+			return nil
+		},
+	},
 }
 
 // LinkRegistry is a store for application links.

@@ -127,7 +127,7 @@ func New(c *component.Component, conf *Config) (as *ApplicationServer, err error
 		config:         conf,
 		linkMode:       linkMode,
 		linkRegistry:   conf.Links,
-		deviceRegistry: conf.Devices,
+		deviceRegistry: wrapDeviceRegistryWithDeprecatedFields(conf.Devices, deprecatedDeviceFields...),
 		formatter: payloadFormatter{
 			repository: &devicerepository.Client{
 				Fetcher: drFetcher,
