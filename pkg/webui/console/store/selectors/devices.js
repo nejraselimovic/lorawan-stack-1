@@ -20,6 +20,7 @@ import {
   createEventsSelector,
   createEventsErrorSelector,
   createEventsStatusSelector,
+  createLatestEventSelector,
 } from './events'
 import {
   createPaginationIdsSelectorByEntity,
@@ -30,12 +31,16 @@ import { createErrorSelector } from './error'
 
 const ENTITY = 'devices'
 
+const deviceEventsSelector = createEventsSelector(ENTITY)
+
 // Device.
 export const selectDeviceStore = state => state.devices
 export const selectDeviceEntitiesStore = state => selectDeviceStore(state).entities
+export const selectDeviceDerivedStore = state => selectDeviceStore(state).derived
 export const selectDeviceByIds = (state, appId, devId) =>
   selectDeviceById(state, combineDeviceIds(appId, devId))
 export const selectDeviceById = (state, id) => selectDeviceEntitiesStore(state)[id]
+export const selectDeviceDerivedById = (state, id) => selectDeviceDerivedStore(state)[id]
 export const selectSelectedDeviceId = state =>
   extractDeviceIdFromCombinedId(selectDeviceStore(state).selectedDevice)
 export const selectSelectedCombinedDeviceId = state => selectDeviceStore(state).selectedDevice
@@ -44,6 +49,20 @@ export const selectSelectedDevice = state =>
 export const selectSelectedDeviceFormatters = state => selectSelectedDevice(state).formatters
 export const selectDeviceFetching = createFetchingSelector(GET_DEV_BASE)
 export const selectDeviceError = createErrorSelector(GET_DEV_BASE)
+
+// Derived.
+export const selectDeviceUplinkFrameCount = function(state, appId, devId) {
+  const derived = selectDeviceDerivedById(state, combineDeviceIds(appId, devId))
+  if (!Boolean(derived)) return undefined
+
+  return derived.uplinkFrameCount
+}
+export const selectDeviceLastSeen = function(state, appId, devId) {
+  const derived = selectDeviceDerivedById(state, combineDeviceIds(appId, devId))
+  if (!Boolean(derived)) return undefined
+
+  return derived.lastSeen
+}
 
 // Devices.
 const selectDevsIds = createPaginationIdsSelectorByEntity(ENTITY)
@@ -58,5 +77,12 @@ export const selectDevicesError = state => selectDevsError(state)
 
 // Events.
 export const selectDeviceEvents = createEventsSelector(ENTITY)
+export const selectDeviceEventsByName = function(state, devId, eventTypes) {
+  const events = deviceEventsSelector(state, devId)
+  if (!Boolean(events)) return undefined
+
+  return events.filter(e => eventTypes.includes(e.name))
+}
 export const selectDeviceEventsError = createEventsErrorSelector(ENTITY)
 export const selectDeviceEventsStatus = createEventsStatusSelector(ENTITY)
+export const selectLatestDeviceEvent = createLatestEventSelector(ENTITY)
