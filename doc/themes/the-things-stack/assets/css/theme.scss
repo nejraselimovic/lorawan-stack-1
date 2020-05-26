@@ -248,4 +248,40 @@ details + blockquote {
   }
 }
 
+.hero-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-container a {
+  display: block;
+  text-align: center;
+}
+
+.hero-subcontainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.hero-subcontainer > a > img {
+  max-width: 80%;
+  max-height: 80%;
+}
+
+.hero-subcontainer-left {
+  background-image: url('/svg/frame_left.svg');
+}
+
+.hero-subcontainer-center {
+  background-image: url('/svg/frame_center.svg');
+}
+
+.hero-subcontainer-right {
+  background-image: url('/svg/frame_right.svg');
+}
+
 @import "highlight.scss";
